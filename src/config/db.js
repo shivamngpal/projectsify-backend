@@ -1,9 +1,20 @@
 const mongoose = require("mongoose");
 
-try{
-    mongoose.connect(process.env.MONGO_URL);
-    console.log("mongoDB connected");
+// mongoose.connect() is async
+// try/catch will NOT catch connection errors
+// You are not exporting anything
+// This file executes immediately on import (bad pattern)
+
+async function connectDB(){
+    try{
+        const mongoConnection = process.env.MONGO_URL;
+        await mongoose.connect(mongoConnection);
+        console.log("mongoDB connected");
+    }
+    catch(e){
+        console.log("Error Occurred : ",e.message);
+        process.exit(1);
+    }
 }
-catch(e){
-    console.log("Error Occurred : ",e);
-}
+
+module.exports = connectDB;

@@ -12,7 +12,8 @@ dotenv.config();
     await connectDB();
     app.use(express.json());
     app.use(cors());
-    app.use(router);
+    // /api/auth/signup or login
+    app.use("/api/auth",router);
     
     app.listen(3000, ()=>{
         console.log("Server started");

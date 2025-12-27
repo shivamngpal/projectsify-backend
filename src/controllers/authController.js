@@ -6,8 +6,8 @@ const { z } = require("zod");
 async function signup(req,res){
   try{
     const signupSchema = z.object({
-      name: z.string(),
-      email: z.email("Invalid email address"),
+      name: z.string().trim().toLowerCase(),
+      email: z.email("Invalid email address").trim().toLowerCase(),
       password: z
         .string()
         .min(8, "Password too short")
@@ -70,4 +70,56 @@ async function signup(req,res){
   }
 }
 
-module.exports = signup;
+async function login(req,res){
+  try{
+
+    const loginSchema = z.object({
+      email: z.email("Invalid email").trim().toLowerCase(),
+      password: z.string().min(8, "Password too short")
+    });
+  
+    const validatedData = loginSchema.safeParse(req.body);
+  
+    if(!validatedData.success){
+      return res.status(400).json({
+        success: false,
+        msg: "input validation failed",
+        error: validatedData.error.message,
+      });
+    }
+  
+    // input has been validated successfully
+    const email = req.body.email;
+    const password = req.body.password;
+  
+    const user = await UserModel.findOne({email});
+    if(!user){
+      return res.status(401).json({
+        success: false,
+        msg: "Invalid email or password",
+      });
+    }
+    
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        msg: "Invalid email or password",
+      });
+    }
+  
+    return res.status(200).json({
+      success: true,
+      msg: "Login successful",
+    });
+  }
+  catch(err){
+    console.error("Login error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Internal server error",
+    });
+  }
+}
+
+module.exports = {signup, login};

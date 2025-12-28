@@ -2,6 +2,7 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/User.js");
 const { z } = require("zod");
+const jwt= require("jsonwebtoken");
 
 async function signup(req,res){
   try{
@@ -27,8 +28,7 @@ async function signup(req,res){
         });
     }
 
-    const email = req.body.email;
-    const password = req.body.password;
+    const {name,email,password} = validatedData.data;
 
     const user = await UserModel.findOne({email});
     if(user){
@@ -89,8 +89,8 @@ async function login(req,res){
     }
   
     // input has been validated successfully
-    const email = req.body.email;
-    const password = req.body.password;
+    // validatedData stores an object when safeParse is used -> {success:boolean, data?, error?}
+    const {email,password} = validatedData.data;
   
     const user = await UserModel.findOne({email});
     if(!user){
@@ -107,10 +107,17 @@ async function login(req,res){
         msg: "Invalid email or password",
       });
     }
-  
+    
+    const jwt_secret= process.env.JWT_SECRET;
+    const token = jwt.sign(
+      {userId: user._id},
+      jwt_secret,
+      {expiresIn:"7d"}
+    );
     return res.status(200).json({
       success: true,
       msg: "Login successful",
+      token:token
     });
   }
   catch(err){
@@ -122,4 +129,13 @@ async function login(req,res){
   }
 }
 
-module.exports = {signup, login};
+function healthCheck(req,res){
+  const {userId,iat,exp} = req.user;
+  res.status(200).json({
+    userId,
+    IssuedAt: iat,
+    Expiry: exp
+  });
+}
+
+module.exports = {signup, login, healthCheck};

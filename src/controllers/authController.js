@@ -17,7 +17,7 @@ async function signup(req,res){
           "Password must contain uppercase, lowercase, number, and special character"
         ),
     });
-    // safeParse returns success prop where parse just returns an error if
+    // safeParse returns an object with success field whereas parse just returns an error if any
     const validatedData = signupSchema.safeParse(req.body);
 
     if(!validatedData.success){
@@ -46,8 +46,8 @@ async function signup(req,res){
     const hashedPassword = await bcrypt.hash(password,SALT_ROUNDS);
 
     await UserModel.create({
-      name: req.body.name,
-      email: req.body.email,
+      name,
+      email,
       password: hashedPassword,
     });
     res.status(201).json({

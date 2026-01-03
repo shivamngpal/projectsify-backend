@@ -4,6 +4,8 @@ const ProjectModel = require("../models/Project");
 const generateTask = require("../services/taskGeneration.service.js");
 const validateTasks = require("../utils/taskValidator.js");
 
+const max_attempts = process.env.MAX_ATTEMPTS;
+
 async function createProject(req,res){
     try{
         // in headers, we get JWT and in body, we get projectDesc-> for now
@@ -21,18 +23,27 @@ async function createProject(req,res){
                 error: validatedData.error.issues
             });
         }
-
-        // generate a list of tasks
-        const generatedTasks = await generateTask(validatedData.data.projectDescription);
-        
-        try{
-            validateTasks(generatedTasks);
-        }catch(err){
-            return res.status(400).json({
-                success:false,
-                msg: "Generated Tasks could not be validated",
-                error: err.message,
-            });
+        let finalTasks = null;
+        let attemptCount=1;
+        while(attemptCount <= max_attempts){
+            try{
+                // generate a list of tasks
+                const generatedTasks = await generateTask(validatedData.data.projectDescription);
+                validateTasks(generatedTasks);
+                finalTasks=generatedTasks;
+                break;
+            }catch(err){
+                // we have already tried generating tasks {max_attempts} times.
+                // thus last attempt also produced error, so return error.
+                if(attemptCount === max_attempts){
+                    return res.status(422).json({
+                        success:false,
+                        msg: "Generated Tasks could not be validated",
+                        error: err.message,
+                    });
+                }
+            }
+            attemptCount++;
         }
 
         // authmiddleware saves userId to req.user

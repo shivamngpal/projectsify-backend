@@ -2,6 +2,7 @@ const { z } = require("zod");
 // const jwt = require("jsonwebtoken");
 const ProjectModel = require("../models/Project");
 const generateTask = require("../services/taskGeneration.service.js");
+const validateTasks = require("../utils/taskValidator.js");
 
 async function createProject(req,res){
     try{
@@ -23,6 +24,16 @@ async function createProject(req,res){
 
         // generate a list of tasks
         const generatedTasks = await generateTask(validatedData.data.projectDescription);
+        
+        try{
+            validateTasks(generatedTasks);
+        }catch(err){
+            return res.status(400).json({
+                success:false,
+                msg: "Generated Tasks could not be validated",
+                error: err.message,
+            });
+        }
 
         // authmiddleware saves userId to req.user
         const userId = req.user.userId;

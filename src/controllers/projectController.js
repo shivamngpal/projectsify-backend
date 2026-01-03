@@ -1,10 +1,11 @@
-const { z } = require("zod");
+const { z, success } = require("zod");
 // const jwt = require("jsonwebtoken");
 const ProjectModel = require("../models/Project");
 const generateTask = require("../services/taskGeneration.service.js");
 const validateTasks = require("../utils/taskValidator.js");
+const { default: mongoose } = require("mongoose");
 
-const max_attempts = process.env.MAX_ATTEMPTS;
+const max_attempts = Number(process.env.MAX_ATTEMPTS) || 3;
 
 async function createProject(req,res){
     try{
@@ -52,7 +53,7 @@ async function createProject(req,res){
         const newProject = await ProjectModel.create({
             userId,
             projectDescription: validatedData.data.projectDescription,
-            tasks: generatedTasks
+            tasks: finalTasks
         });
 
         res.status(201).json({
@@ -71,4 +72,39 @@ async function createProject(req,res){
     }
 }
 
-module.exports=createProject;
+async function getProject(req,res){
+    try{
+
+        const {projectId} = req.params;
+        const userId = req.user.userId;
+    
+        if(!mongoose.Types.ObjectId.isValid(projectId) || !mongoose.Types.ObjectId.isValid(userId)){
+            return res.status(400).json({
+              success: false,
+              msg: "Invalid projectId or userId",
+            });
+        }
+    
+        const project = await ProjectModel.findOne({userId, _id:projectId}).select("-userId -updatedAt -__v");
+        if(!project){
+            return res.status(404).json({
+                success:false,
+                msg:"Project does not exist"
+            });
+        }
+    
+        res.status(200).json({
+            success:true,
+            msg:"Fetched Project Successfully",
+            project:project
+        });
+    }
+    catch(err){
+        res.status(400).json({
+            success:false,
+            msg:"Failed to fetch Project"
+        });
+    }
+}
+
+module.exports={createProject, getProject};

@@ -19,19 +19,6 @@ async function createProject(req,res){
                 error: validatedData.error.issues
             });
         }
-    
-        // const authToken = req.headers.authorization;
-        // if(!authToken){
-        //     return res.status(400).json({
-        //         success:false,
-        //         msg:"Unauthorized"
-        //     });
-        // }
-
-        // const token = authToken.split(" ")[1];
-        // const JWT_SECRET = process.env.JWT_SECRET;
-
-        // const decodedToken = jwt.verify(token,JWT_SECRET);
 
         const userId = req.user.userId;
 

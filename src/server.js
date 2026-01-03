@@ -1,7 +1,8 @@
 const express = require("express");
 const connectDB = require("./config/db.js");
 const dotenv = require("dotenv");
-const router = require("./routes/authRoutes.js");
+const authRouter = require("./routes/authRoutes.js");
+const projectRouter = require("./routes/projectRoutes.js");
 const cors = require("cors");
 const app = express();
 
@@ -13,7 +14,8 @@ dotenv.config();
     app.use(express.json());
     app.use(cors());
     // /api/auth/signup or login
-    app.use("/api/auth",router);
+    app.use("/api/auth",authRouter);
+    app.use("/api", projectRouter);
     
     app.listen(3000, ()=>{
         console.log("Server started");

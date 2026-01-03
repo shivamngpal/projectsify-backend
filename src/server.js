@@ -1,12 +1,12 @@
 const express = require("express");
 const connectDB = require("./config/db.js");
 const dotenv = require("dotenv");
+dotenv.config();
 const authRouter = require("./routes/authRoutes.js");
 const projectRouter = require("./routes/projectRoutes.js");
 const cors = require("cors");
 const app = express();
 
-dotenv.config();
 
 // this is IIFE -> Immediately Invoked Function Expression
 (async()=>{

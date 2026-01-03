@@ -1,6 +1,7 @@
 const { z } = require("zod");
 // const jwt = require("jsonwebtoken");
 const ProjectModel = require("../models/Project");
+const generateTask = require("../services/taskGeneration.service.js");
 
 async function createProject(req,res){
     try{
@@ -20,11 +21,16 @@ async function createProject(req,res){
             });
         }
 
+        // generate a list of tasks
+        const generatedTasks = await generateTask(validatedData.data.projectDescription);
+
+        // authmiddleware saves userId to req.user
         const userId = req.user.userId;
 
         const newProject = await ProjectModel.create({
             userId,
-            projectDescription: validatedData.data.projectDescription
+            projectDescription: validatedData.data.projectDescription,
+            tasks: generatedTasks
         });
 
         res.status(201).json({

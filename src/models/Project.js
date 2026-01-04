@@ -1,6 +1,25 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const GuidanceSchema = new Schema(
+  {
+    steps: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: (arr) => {
+          return arr && arr.length > 0;
+        },
+        message: "Steps must contain at least one item",
+      },
+    },
+    codeSnippets:{type:[{language: String,code: String}], default:[]}, 
+    commonMistakes: { type: [String] },
+    verification: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const TaskSchema = new Schema({
     title: {type: String, required:true},
     description: {type:String},
@@ -19,7 +38,7 @@ const TaskSchema = new Schema({
         type:Boolean,
         default:false
     },
-    guidance:{type: Object}
+    guidance: {type:GuidanceSchema, default:null}
 },{timestamps:true});
 
 const ProjectSchema = new Schema({

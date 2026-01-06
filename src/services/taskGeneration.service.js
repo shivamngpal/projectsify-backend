@@ -12,8 +12,6 @@ async function generateTask(projdesc){
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are a senior software mentor helping a beginner student COMPLETE a project.
-
-            This is the project description: ${projdesc}.
             Your task is to break the given project idea into a clear, executable, step-by-step task list that a beginner can follow to FINISH the project without getting overwhelmed.
 
             You must implicitly choose a suitable, beginner-friendly tech stack.
@@ -66,8 +64,7 @@ async function generateTask(projdesc){
             - Human-readable only (e.g. "10-15 minutes", "30 minutes", "~1 hour")
             - No dates, no vague words
 
-            Project Idea:
-            "<USER_PROJECT_DESCRIPTION>"
+            Project Idea: ${projdesc}
 
             Return ONLY the JSON array of tasks.
             Do not include any other text.`

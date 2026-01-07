@@ -12,12 +12,15 @@ const app = express();
 (async()=>{
     await connectDB();
     app.use(express.json());
-    app.use(cors());
+    app.use(cors({
+        origin:["http://localhost:5173"]
+    }));
     // /api/auth/signup or login
     app.use("/api/auth",authRouter);
     app.use("/api", projectRouter);
     
-    app.listen(3000, ()=>{
+    const port = process.env.PORT || 3000;
+    app.listen(port, ()=>{
         console.log("Server started");
     });
 })();

@@ -29,14 +29,13 @@ async function createProject(req, res) {
     while (attemptCount <= max_attempts) {
       try {
         // generate a list of tasks
-        const generatedTasks = await generateTask(
-          validatedData.data.projectDescription
-        );
+        const generatedTasks = await generateTask(validatedData.data.projectDescription);
         validateTasks(generatedTasks);
         finalTasks = generatedTasks;
         break;
       } catch (err) {
         if (attemptCount === max_attempts) {
+          console.error("Max attempts reached, returning 422");
           return res.status(422).json({
             success: false,
             msg: "Generated Tasks could not be validated",
@@ -47,7 +46,7 @@ async function createProject(req, res) {
       attemptCount++;
     }
 
-    // authmiddleware saves userId to req.user
+    // auth middleware saves userId to req.user
     const userId = req.user.userId;
 
     const newProject = await ProjectModel.create({

@@ -75,8 +75,12 @@ async function generateTask(projdesc) {
     .replace(/```$/, "")
     .trim();
 
+  console.log("Raw Gemini response length:", jsonText.length);
+  console.log("First 200 chars:", jsonText.substring(0, 200));
+
   // convert string to js object
   const tasks = JSON.parse(jsonText);
+  console.log("Parsed tasks count:", tasks?.length);
   return tasks;
 }
 

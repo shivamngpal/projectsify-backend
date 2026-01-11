@@ -7,104 +7,107 @@ const { default: mongoose } = require("mongoose");
 
 const max_attempts = Number(process.env.MAX_ATTEMPTS) || 3;
 
-async function createProject(req,res){
-    try{
-        // in headers, we get JWT and in body, we get projectDesc-> for now
-        const projSchema = z.object({
-            projectDescription: z.string("Project Description is not a String")
-        });
-    
-        // const projectDesc = req.body.projectDescription;
-        const validatedData = projSchema.safeParse(req.body);
-    
-        if(!validatedData.success){
-            return res.status(400).json({
-                success:false,
-                msg:"Project could not be created",
-                error: validatedData.error.issues
-            });
-        }
-        let finalTasks = null;
-        let attemptCount=1;
-        while(attemptCount <= max_attempts){
-            try{
-                // generate a list of tasks
-                const generatedTasks = await generateTask(validatedData.data.projectDescription);
-                validateTasks(generatedTasks);
-                finalTasks=generatedTasks;
-                break;
-            }catch(err){
-                // we have already tried generating tasks {max_attempts} times.
-                // thus last attempt also produced error, so return error.
-                if(attemptCount === max_attempts){
-                    return res.status(422).json({
-                        success:false,
-                        msg: "Generated Tasks could not be validated",
-                        error: err.message,
-                    });
-                }
-            }
-            attemptCount++;
-        }
+async function createProject(req, res) {
+  try {
+    // in headers, we get JWT and in body, we get projectDesc-> for now
+    const projSchema = z.object({
+      projectDescription: z.string("Project Description is not a String"),
+    });
 
-        // authmiddleware saves userId to req.user
-        const userId = req.user.userId;
+    // const projectDesc = req.body.projectDescription;
+    const validatedData = projSchema.safeParse(req.body);
 
-        const newProject = await ProjectModel.create({
-            userId,
-            projectDescription: validatedData.data.projectDescription,
-            tasks: finalTasks
-        });
-
-        res.status(201).json({
-            success:true,
-            msg:"Project created successfully",
-            projectId: newProject._id,
-            projectDescription: newProject.projectDescription,
-            createdAt: newProject.createdAt
-        });
+    if (!validatedData.success) {
+      return res.status(400).json({
+        success: false,
+        msg: "Project could not be created",
+        error: validatedData.error.issues,
+      });
     }
-    catch(err){
-        res.status(400).json({
-            success:false,
-            msg:"Some error occured"
-        });
+    let finalTasks = null;
+    let attemptCount = 1;
+    while (attemptCount <= max_attempts) {
+      try {
+        // generate a list of tasks
+        const generatedTasks = await generateTask(
+          validatedData.data.projectDescription
+        );
+        validateTasks(generatedTasks);
+        finalTasks = generatedTasks;
+        break;
+      } catch (err) {
+        if (attemptCount === max_attempts) {
+          return res.status(422).json({
+            success: false,
+            msg: "Generated Tasks could not be validated",
+            error: err.message,
+          });
+        }
+      }
+      attemptCount++;
     }
+
+    // authmiddleware saves userId to req.user
+    const userId = req.user.userId;
+
+    const newProject = await ProjectModel.create({
+      userId,
+      projectDescription: validatedData.data.projectDescription,
+      tasks: finalTasks,
+    });
+
+    res.status(201).json({
+      success: true,
+      msg: "Project created successfully",
+      projectId: newProject._id,
+      projectDescription: newProject.projectDescription,
+      createdAt: newProject.createdAt,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      msg: "Some error occured",
+    });
+  }
 }
 
-async function getProject(req,res){
-    try{
+async function getProject(req, res) {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user.userId;
 
-        const {projectId} = req.params;
-        const userId = req.user.userId;
-    
-        if(!mongoose.Types.ObjectId.isValid(projectId) || !mongoose.Types.ObjectId.isValid(userId)){
-            return res.status(400).json({
-              success: false,
-              msg: "Invalid projectId or userId",
-            });
-        }
-    
-        const project = await ProjectModel.findOne({userId, _id:projectId}).select("-userId -updatedAt -__v");
-        if(!project){
-            return res.status(404).json({
-                success:false,
-                msg:"Project does not exist"
-            });
-        }
-    
-        res.status(200).json({
-            success:true,
-            msg:"Fetched Project Successfully",
-            project:project
-        });
+    if (
+      !mongoose.Types.ObjectId.isValid(projectId) ||
+      !mongoose.Types.ObjectId.isValid(userId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid projectId or userId",
+      });
     }
-    catch(err){
-        res.status(400).json({
-            success:false,
-            msg:"Failed to fetch Project"
-        });
+
+    const project = await ProjectModel.findOne({
+      userId,
+      _id: projectId,
+    }).select("-userId -updatedAt -__v");
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        msg: "Project does not exist",
+      });
     }
+
+    res.status(200).json({
+      success: true,
+      msg: "Fetched Project Successfully",
+      project: project,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      msg: "Failed to fetch Project",
+    });
+  }
 }
 
-module.exports={createProject, getProject};
+module.exports = { createProject, getProject };

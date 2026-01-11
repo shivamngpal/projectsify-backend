@@ -29,11 +29,11 @@ function validateTasks(tasks) {
     if (typeof task.description !== "string") {
       throw new Error("Description must be a string");
     }
-    const sentences = task.description
-      .trim()
-      // split only when punctuation is followed by a space and a capital letter
-      .split(/(?<=[.!?])\s+(?=[A-Z])/)
-      .filter((s) => s.trim().length);
+    const desc = task.description.trim().replace(/\n+/g, " ");
+    const sentences = desc
+      .split(/[.!?]+\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length);
     if (sentences.length === 0 || sentences.length > 2) {
       console.log("Invalid task:", task);
       throw new Error("Description must be 1-2 sentences");

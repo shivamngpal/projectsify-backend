@@ -1,15 +1,15 @@
-const {GoogleGenAI} = require("@google/genai");
+const { GoogleGenAI } = require("@google/genai");
 const geminiApiKey = process.env.GEMINI_API_KEY;
-if(!geminiApiKey){
-    throw new Error("Gemini API key is not defined");
+if (!geminiApiKey) {
+  throw new Error("Gemini API key is not defined");
 }
-const ai = new GoogleGenAI({geminiApiKey});
+const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-async function generateGuidance(projectDescription,taskTitle,taskDescription){
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" },
-      contents: `You are a senior software engineer helping a beginner COMPLETE a specific development task.
+async function generateGuidance(projectDescription, taskTitle, taskDescription) {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" },
+    contents: `You are a senior software engineer helping a beginner COMPLETE a specific development task.
             Your job is to provide clear, practical guidance ONLY for the given task.
             Do NOT explain general concepts.
             Do NOT teach theory.
@@ -71,18 +71,18 @@ async function generateGuidance(projectDescription,taskTitle,taskDescription){
 
             Return ONLY the JSON object.
             Do not include any other text.`,
-    });
+  });
 
-    const raw =
-      response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      response?.text?.trim() ||
-      "";
-    const jsonText = raw
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/```$/, "")
-      .trim();
+  const raw =
+    response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+    response?.text?.trim() ||
+    "";
+  const jsonText = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/, "")
+    .trim();
 
-    return JSON.parse(jsonText);
+  return JSON.parse(jsonText);
 }
 
 module.exports = generateGuidance;

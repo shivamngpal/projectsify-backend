@@ -1,17 +1,15 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
-if(!geminiApiKey){
-    console.log("No gemini api key present");
-    return;
-}
+const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
-const ai = new GoogleGenAI({apiKey: geminiApiKey});
-
-async function generateTask(projdesc){
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `You are a senior software mentor helping a beginner student COMPLETE a project.
+async function generateTask(projdesc) {
+  if (!ai) {
+    throw new Error("Gemini API key is not defined");
+  }
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `You are a senior software mentor helping a beginner student COMPLETE a project.
             Your task is to break the given project idea into a clear, executable, step-by-step task list that a beginner can follow to FINISH the project without getting overwhelmed.
 
             You must implicitly choose a suitable, beginner-friendly tech stack.
@@ -67,20 +65,20 @@ async function generateTask(projdesc){
             Project Idea: ${projdesc}
 
             Return ONLY the JSON array of tasks.
-            Do not include any other text.`
-});
+            Do not include any other text.`,
+  });
 
-    let jsonText = response.text.trim();
-// // Removes markdown code block formatting that Gemini sometimes adds
-// // First replace: /```json\n?/g - Removes "```json" and optional newline
-// // Second replace: /```\n?/g - Removes closing "```" and optional newline
-// // g flag means "global" - replace all occurrences
-//     jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+  let jsonText = (response?.text || "").trim();
+  // Remove markdown code fences if present
+  jsonText = jsonText
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/, "")
+    .trim();
 
-    // convert string to js object
-    const tasks = JSON.parse(jsonText);
-    return tasks;
-};
+  // convert string to js object
+  const tasks = JSON.parse(jsonText);
+  return tasks;
+}
 
 // (async () => {
 //     try{
@@ -91,4 +89,4 @@ async function generateTask(projdesc){
 //         console.error("Error: ",err.message);
 //     }
 // })();
-module.exports=generateTask;
+module.exports = generateTask;

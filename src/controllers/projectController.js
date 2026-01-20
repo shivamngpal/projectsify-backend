@@ -109,4 +109,30 @@ async function getProject(req, res) {
   }
 }
 
-module.exports = { createProject, getProject };
+async function getUserProjects(req,res){
+  try{
+    const userId = req.user.userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid projectId or userId",
+      });
+    }
+
+    const projects = await ProjectModel.find({userId});
+
+    return res.status(200).json({
+      success: true,
+      msg: "Projects fetched successfully",
+      projects: projects,
+    });
+  }catch(err){
+    return res.status(500).json({
+      success: false,
+      msg: "Failed to fetch projects",
+      error: err.message,
+    });
+  }
+}
+
+module.exports = { createProject, getProject, getUserProjects };

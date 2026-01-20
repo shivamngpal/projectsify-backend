@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 // You are not exporting anything
 // This file executes immediately on import (bad pattern)
 
+// This was when i was using IIFE
+
 async function connectDB(){
     try{
         const mongoConnection = process.env.MONGO_URL;
